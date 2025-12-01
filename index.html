@@ -4,29 +4,36 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Painel Admin - ADD</title>
-<link://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css
-<script src="https://cdn.sheetjs.com/xlsx-latest/packagell.min.js</script>
+<title>Painel do Administrador - ADD</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrapript src="https://cdn.sheetjs.com/xlsx-latest/packagell.min.js</script>
 <style>
-    body { background: #f8f9fa; padding: 20px; }
-    .container { max-width: 1200px; margin: auto; }
+    body { background: #f8f9fa; }
+    .container { max-width: 1200px; margin-top: 40px; }
+    h2 { display: flex; align-items: gap: 10px; }
+    h2::before { content: "📊"; font-size: 1.5rem; }
+    .table-container { max-height: 500px; overflow-y: auto; }
+    .status-msg { font-weight: bold; margin-bottom: 15px; }
 </style>
 </head>
 <body>
 <div class="container">
-    <h2 class="mb-4">📊 Painel do Administrador</h2>
-    <p id="status" class="text-danger"></p>
-    <button class="btn btn-success mb-3" onclick="baixarXLSX()">⬇️ Baixar XLSX</button>
-    <table class="table table-bordered table-striped">
-        <thead>
-            <tr>
-                <th>ID</th><th>Nome</th><th>Email</th><th>Regional</th><th>Polo</th>
-                <th>Matrícula</th><th>Data Uso</th><th>Tipo Refeição</th><th>Horário</th>
-                <th>Localidade</th><th>GPS</th><th>Sequência</th><th>OS/RRSS</th><th>Nº ADD</th><th>Observação</th>
-            </tr>
-        </thead>
-        <tbody id="tabela"></tbody>
-    </table>
+    <h2>Painel do Administrador</h2>
+    <p id="status" class="status-msg text-danger"></p>
+    <div class="d-flex justify-content-between mb-3">
+        <button class="btn btn-success" onclick="baixarXLSX()">⬇️ Baixar XLSX</button>
+    </div>
+    <div class="table-container">
+        <table class="table table-bordered table-striped table-hover">
+            <thead class="table-dark">
+                <tr>
+                    <th>ID</th><th>Nome</th><th>Email</th><th>Regional</th><th>Polo</th>
+                    <th>Matrícula</th><th>Data Uso</th><th>Tipo Refeição</th><th>Horário</th>
+                    <th>Localidade</th><th>GPS</th><th>Sequência</th><th>OS/RRSS</th><th>Nº ADD</th><th>Observação</th>
+                </tr>
+            </thead>
+            <tbody id="tabela"></tbody>
+        </table>
+    </div>
 </div>
 
 <script>
@@ -50,6 +57,10 @@ document.addEventListener("DOMContentLoaded", async () => {
             status.innerText = "Nenhum registro encontrado.";
             return;
         }
+
+        status.classList.remove("text-danger");
+        status.classList.add("text-success");
+        status.innerText = `✅ ${dados.length} registros carregados com sucesso.`;
 
         preencherTabela(dados);
     } catch (err) {
