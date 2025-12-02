@@ -8,78 +8,125 @@
 <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
 
 <style>
-    body { background: #f8f9fa; }
+    :root {
+        --energisa-blue: #0097CE;
+        --energisa-blue-dark: #0079a6;
+        --energisa-orange: #F36F21;
+    }
 
-.container {
-    max-width: 95%;
-    margin-top: 40px;
-}
+    body {
+        background: #f4f6f9;
+        font-family: 'Segoe UI', sans-serif;
+    }
 
-h2 { display: flex; align-items: gap: 10px; }
-h2::before { content: "📊"; font-size: 1.5rem; }
+    .topbar {
+        background: var(--energisa-blue);
+        color: white;
+        padding: 15px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border-bottom: 4px solid var(--energisa-orange);
+    }
 
-.table-container {
-    max-height: 750px;
-    overflow-y: auto;
-}
+    .logout-btn {
+        background: var(--energisa-orange);
+        border: none;
+        color: white;
+        padding: 8px 15px;
+        border-radius: 6px;
+        font-weight: bold;
+        transition: 0.3s;
+    }
+    .logout-btn:hover {
+        background: #d95f1c;
+    }
 
-table td, table th {
-    padding: 10px 12px;
-    font-size: 0.95rem;
-}
+    .container {
+        max-width: 97%;
+        margin-top: 25px;
+    }
 
-.status-msg { font-weight: bold; margin-bottom: 15px; }
+    .table-container {
+        max-height: 750px;
+        overflow-y: auto;
+        border: 2px solid #ddd;
+        border-radius: 6px;
+    }
+
+    table td, table th {
+        padding: 10px;
+        font-size: 0.90rem;
+    }
+
+    .filter-card {
+        padding: 20px;
+        background: white;
+        border-radius: 8px;
+        box-shadow: 0 2px 5px rgb(0 0 0 / 0.15);
+    }
 </style>
 </head>
 
 <body>
+
+<!-- 🔵 BARRA SUPERIOR -->
+<div class="topbar">
+    <h4 class="m-0">Painel do Administrador - Energisa</h4>
+    <div>
+        <span id="userInfo" class="me-3 fw-bold"></span>
+        <button class="logout-btn" onclick="logout()">Sair</button>
+    </div>
+</div>
+
 <div class="container">
-    <h2>Painel do Administrador</h2>
 
     <p id="status" class="status-msg text-danger"></p>
 
     <!-- 🔎 FILTROS -->
-    <div class="row mb-4">
-        <div class="col-md-3">
-            <label class="fw-bold">Filtrar por Regional</label>
-            <select id="filtroRegional" class="form-select">
-                <option value="">Todas</option>
-                <option>LESTE</option>
-                <option>CENTRO</option>
-                <option>OESTE</option>
-            </select>
+    <div class="filter-card mb-4">
+
+        <div class="row">
+            <div class="col-md-3">
+                <label class="fw-bold">Filtrar por Regional</label>
+                <select id="filtroRegional" class="form-select">
+                    <option value="">Todas</option>
+                    <option>LESTE</option>
+                    <option>CENTRO</option>
+                    <option>OESTE</option>
+                </select>
+            </div>
+
+            <div class="col-md-3">
+                <label class="fw-bold">Filtrar por Polo</label>
+                <select id="filtroPolo" class="form-select">
+                    <option value="">Todos</option>
+                    <option>João Pessoa</option><option>Itabaiana</option><option>Mamanguape</option>
+                    <option>Borborema</option><option>Campina Grande</option><option>Monteiro</option>
+                    <option>Guarabira</option><option>Esperança</option><option>Itaporanga</option>
+                    <option>Sousa</option><option>Patos</option><option>Catolé do Rocha</option>
+                </select>
+            </div>
+
+            <div class="col-md-3">
+                <label class="fw-bold">Data Inicial</label>
+                <input id="dataInicio" type="date" class="form-control">
+            </div>
+
+            <div class="col-md-3">
+                <label class="fw-bold">Data Final</label>
+                <input id="dataFim" type="date" class="form-control">
+            </div>
         </div>
 
-        <div class="col-md-3">
-            <label class="fw-bold">Filtrar por Polo</label>
-            <select id="filtroPolo" class="form-select">
-                <option value="">Todos</option>
-                <option>João Pessoa</option><option>Itabaiana</option><option>Mamanguape</option>
-                <option>Borborema</option><option>Campina Grande</option><option>Monteiro</option>
-                <option>Guarabira</option><option>Esperança</option><option>Itaporanga</option>
-                <option>Sousa</option><option>Patos</option><option>Catolé do Rocha</option>
-            </select>
-        </div>
-
-        <div class="col-md-3">
-            <label class="fw-bold">Data Inicial</label>
-            <input id="dataInicio" type="date" class="form-control">
-        </div>
-
-        <div class="col-md-3">
-            <label class="fw-bold">Data Final</label>
-            <input id="dataFim" type="date" class="form-control">
+        <div class="d-flex justify-content-end mt-3 gap-2">
+            <button class="btn btn-primary" onclick="aplicarFiltros()">🔍 Aplicar</button>
+            <button class="btn btn-secondary" onclick="limparFiltros()">♻️ Limpar</button>
+            <button class="btn btn-success" onclick="baixarXLSX()">⬇️ Baixar XLSX</button>
         </div>
     </div>
 
-    <!-- Botão -->
-    <div class="d-flex justify-content-between mb-3">
-        <button class="btn btn-primary" onclick="aplicarFiltros()">🔍 Aplicar Filtros</button>
-        <button class="btn btn-secondary" onclick="limparFiltros()">♻️ Limpar Filtros</button>
-        <button class="btn btn-success" onclick="baixarXLSX()">⬇️ Baixar XLSX</button>
-    </div>
-
-    <!-- TABELA -->
+    <!-- 🧾 TABELA -->
     <div class="table-container">
         <table class="table table-bordered table-striped table-hover">
             <thead class="table-dark">
@@ -99,39 +146,45 @@ table td, table th {
 let dados = [];
 let dadosFiltrados = [];
 
-// ⭐ Admins autorizados
-// 🔐 Lista de matrículas permitidas
-const ADMINS = ["3080117", "10374"];
+/* ================================
+    🔐 BLOQUEIO DE ADMIN
+================================ */
 
-// 📌 Verifica se o usuário está logado
+const ADMINS = ["3080117", "10374"];
 const matriculaLogin = localStorage.getItem("matricula");
 
-// ❌ Se não estiver logado → manda para login
 if (!matriculaLogin) {
     window.location.href = "https://pedrofillype14.github.io/login/";
 }
 
-// ❌ Se estiver logado mas NÃO for admin → volta para página normal
 if (!ADMINS.includes(matriculaLogin)) {
-    alert("Acesso negado! Apenas administradores podem acessar esta página.");
+    alert("Acesso negado!");
     window.location.href = "https://pedrofillype14.github.io/prestacao_de_contas/";
 }
 
+document.getElementById("userInfo").innerText =
+    "Logado como: " + matriculaLogin;
+
+/* ================================
+    LOGOUT
+================================ */
+
+function logout() {
+    localStorage.removeItem("matricula");
+    window.location.href = "https://pedrofillype14.github.io/login/";
+}
+
+/* ================================
+    CARREGAR DADOS
+================================ */
 
 document.addEventListener("DOMContentLoaded", async () => {
-    const matricula = localStorage.getItem("matricula");
     const status = document.getElementById("status");
-
-    if (!ADMINS.includes(matricula)) {
-        status.innerText = "❌ Acesso negado. Apenas administradores podem ver esta página.";
-        setTimeout(() => window.location.href = "https://pedrofillype14.github.io/login/", 2500);
-        return;
-    }
 
     try {
         const resp = await fetch("https://long-hall-0aaa.pedro-fillype.workers.dev/buscar-todos");
         dados = await resp.json();
-        dadosFiltrados = [...dados]; // cópia inicial
+        dadosFiltrados = [...dados];
 
         if (!Array.isArray(dados) || dados.length === 0) {
             status.innerText = "Nenhum registro encontrado.";
@@ -142,11 +195,14 @@ document.addEventListener("DOMContentLoaded", async () => {
         status.innerText = `✅ ${dados.length} registros carregados com sucesso.`;
 
         preencherTabela(dadosFiltrados);
-
     } catch (err) {
         status.innerText = "Erro ao carregar dados: " + err.message;
     }
 });
+
+/* ================================
+    TABELA
+================================ */
 
 function preencherTabela(lista) {
     const tabela = document.getElementById("tabela");
@@ -166,9 +222,9 @@ function preencherTabela(lista) {
     });
 }
 
-/* ============================
-        FILTROS
-============================ */
+/* ================================
+    FILTROS
+================================ */
 
 function aplicarFiltros() {
     const reg = document.getElementById("filtroRegional").value;
@@ -177,13 +233,10 @@ function aplicarFiltros() {
     const dtFim = document.getElementById("dataFim").value;
 
     dadosFiltrados = dados.filter(item => {
-
         if (reg && item.regional !== reg) return false;
         if (polo && item.polo !== polo) return false;
-
         if (dtInicio && item.datauso < dtInicio) return false;
         if (dtFim && item.datauso > dtFim) return false;
-
         return true;
     });
 
@@ -200,9 +253,9 @@ function limparFiltros() {
     preencherTabela(dadosFiltrados);
 }
 
-/* ============================
-        EXPORTAÇÃO XLSX
-============================ */
+/* ================================
+    EXPORTAR XLSX
+================================ */
 
 function baixarXLSX() {
     if (!dadosFiltrados.length) {
