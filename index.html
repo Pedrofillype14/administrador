@@ -38,10 +38,48 @@ table td, table th {
 
     <p id="status" class="status-msg text-danger"></p>
 
+    <!-- 🔎 FILTROS -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <label class="fw-bold">Filtrar por Regional</label>
+            <select id="filtroRegional" class="form-select">
+                <option value="">Todas</option>
+                <option>LESTE</option>
+                <option>CENTRO</option>
+                <option>OESTE</option>
+            </select>
+        </div>
+
+        <div class="col-md-3">
+            <label class="fw-bold">Filtrar por Polo</label>
+            <select id="filtroPolo" class="form-select">
+                <option value="">Todos</option>
+                <option>João Pessoa</option><option>Itabaiana</option><option>Mamanguape</option>
+                <option>Borborema</option><option>Campina Grande</option><option>Monteiro</option>
+                <option>Guarabira</option><option>Esperança</option><option>Itaporanga</option>
+                <option>Sousa</option><option>Patos</option><option>Catolé do Rocha</option>
+            </select>
+        </div>
+
+        <div class="col-md-3">
+            <label class="fw-bold">Data Inicial</label>
+            <input id="dataInicio" type="date" class="form-control">
+        </div>
+
+        <div class="col-md-3">
+            <label class="fw-bold">Data Final</label>
+            <input id="dataFim" type="date" class="form-control">
+        </div>
+    </div>
+
+    <!-- Botão -->
     <div class="d-flex justify-content-between mb-3">
+        <button class="btn btn-primary" onclick="aplicarFiltros()">🔍 Aplicar Filtros</button>
+        <button class="btn btn-secondary" onclick="limparFiltros()">♻️ Limpar Filtros</button>
         <button class="btn btn-success" onclick="baixarXLSX()">⬇️ Baixar XLSX</button>
     </div>
 
+    <!-- TABELA -->
     <div class="table-container">
         <table class="table table-bordered table-striped table-hover">
             <thead class="table-dark">
@@ -59,15 +97,15 @@ table td, table th {
 
 <script>
 let dados = [];
+let dadosFiltrados = [];
 
-// ⭐ Lista de administradores (pode ter quantos quiser)
+// ⭐ Admins autorizados
 const ADMINS = ["3080117", "10374"];
 
 document.addEventListener("DOMContentLoaded", async () => {
     const matricula = localStorage.getItem("matricula");
     const status = document.getElementById("status");
 
-    // 🔐 Se tentar manipular localStorage, isso garante o bloqueio
     if (!ADMINS.includes(matricula)) {
         status.innerText = "❌ Acesso negado. Apenas administradores podem ver esta página.";
         setTimeout(() => window.location.href = "https://pedrofillype14.github.io/login/", 2500);
@@ -77,6 +115,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     try {
         const resp = await fetch("https://long-hall-0aaa.pedro-fillype.workers.dev/buscar-todos");
         dados = await resp.json();
+        dadosFiltrados = [...dados]; // cópia inicial
 
         if (!Array.isArray(dados) || dados.length === 0) {
             status.innerText = "Nenhum registro encontrado.";
@@ -86,7 +125,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         status.classList.replace("text-danger", "text-success");
         status.innerText = `✅ ${dados.length} registros carregados com sucesso.`;
 
-        preencherTabela(dados);
+        preencherTabela(dadosFiltrados);
 
     } catch (err) {
         status.innerText = "Erro ao carregar dados: " + err.message;
@@ -100,26 +139,66 @@ function preencherTabela(lista) {
     lista.forEach(item => {
         tabela.innerHTML += `
             <tr>
-                <td>${item.id}</td><td>${item.nome}</td><td>${item.email}</td><td>${item.regional}</td>
-                <td>${item.polo}</td><td>${item.matricula}</td><td>${item.datauso}</td><td>${item.tiporefeicao}</td>
-                <td>${item.horario}</td><td>${item.localidade}</td><td>${item.gps}</td><td>${item.sequencia || ""}</td>
-                <td>${item.osrrss || ""}</td><td>${item.numeroadd || ""}</td><td>${item.observacao || ""}</td>
+                <td>${item.id}</td><td>${item.nome}</td><td>${item.email}</td>
+                <td>${item.regional}</td><td>${item.polo}</td>
+                <td>${item.matricula}</td><td>${item.datauso}</td><td>${item.tiporefeicao}</td>
+                <td>${item.horario}</td><td>${item.localidade}</td><td>${item.gps}</td>
+                <td>${item.sequencia || ""}</td><td>${item.osrrss || ""}</td>
+                <td>${item.numeroadd || ""}</td><td>${item.observacao || ""}</td>
             </tr>
         `;
     });
 }
 
+/* ============================
+        FILTROS
+============================ */
+
+function aplicarFiltros() {
+    const reg = document.getElementById("filtroRegional").value;
+    const polo = document.getElementById("filtroPolo").value;
+    const dtInicio = document.getElementById("dataInicio").value;
+    const dtFim = document.getElementById("dataFim").value;
+
+    dadosFiltrados = dados.filter(item => {
+
+        if (reg && item.regional !== reg) return false;
+        if (polo && item.polo !== polo) return false;
+
+        if (dtInicio && item.datauso < dtInicio) return false;
+        if (dtFim && item.datauso > dtFim) return false;
+
+        return true;
+    });
+
+    preencherTabela(dadosFiltrados);
+}
+
+function limparFiltros() {
+    document.getElementById("filtroRegional").value = "";
+    document.getElementById("filtroPolo").value = "";
+    document.getElementById("dataInicio").value = "";
+    document.getElementById("dataFim").value = "";
+
+    dadosFiltrados = [...dados];
+    preencherTabela(dadosFiltrados);
+}
+
+/* ============================
+        EXPORTAÇÃO XLSX
+============================ */
+
 function baixarXLSX() {
-    if (!dados.length) {
+    if (!dadosFiltrados.length) {
         alert("Nenhum dado para exportar.");
         return;
     }
 
-    const ws = XLSX.utils.json_to_sheet(dados);
+    const ws = XLSX.utils.json_to_sheet(dadosFiltrados);
     const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, "Registros");
+    XLSX.utils.book_append_sheet(wb, ws, "Registros Filtrados");
 
-    XLSX.writeFile(wb, "registros_ADD.xlsx");
+    XLSX.writeFile(wb, "registros_ADD_filtrados.xlsx");
 }
 </script>
 
